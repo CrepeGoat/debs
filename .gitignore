@@ -5,3 +5,7 @@
 # Sublime Text files
 *.sublime-project
 *.sublime-workspace
+
+
+# Zig files
+zig-cache
