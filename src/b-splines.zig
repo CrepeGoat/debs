@@ -7,9 +7,9 @@ test "b-spline evaluation - 1st-degree, scalar output" {
 
     const degree = 1;
     const knots = [_]Knot{ 0, 0, 3, 4, 4 };
-    const ctrl_points = [knots.len - degree - 1]CtrlPoint{ 1, 2, 5 };
+    const ctrl_points = [_]CtrlPoint{ 1, 2, 5 };
 
-    const spline = BSpline1D(Knot){ .knots = &knots };
+    const spline = BSpline1D(Knot, knots.len){ .knots = &knots };
 
     // TODO add test case for duplicate interior knots
 
@@ -96,9 +96,9 @@ test "b-spline evaluation - 2nd-degree, scalar output" {
 
     const degree = 2;
     const knots = [_]Knot{ 0, 0, 0, 3, 4, 4, 4 };
-    const ctrl_points = [knots.len - degree - 1]CtrlPoint{ 1, 2, 5, 1 };
+    const ctrl_points = [_]CtrlPoint{ 1, 2, 5, 1 };
 
-    const spline = BSpline1D(Knot){ .knots = &knots };
+    const spline = BSpline1D(Knot, knots.len){ .knots = &knots };
 
     // TODO add test case for duplicate interior knots
 
@@ -211,7 +211,7 @@ test "b-spline bases" {
     {
         const degree = 0;
         const knots = [6]T{ 0, 1, 3, 4, 4, 5 };
-        const spline = BSpline1D(T){ .knots = &knots };
+        const spline = BSpline1D(T, knots.len){ .knots = &knots };
 
         try std.testing.expectEqual(null, spline.basesAt(degree, -1.00));
         {
@@ -240,7 +240,7 @@ test "b-spline bases" {
     {
         const degree = 1;
         const knots = [8]T{ 0, 0, 1, 3, 3, 3, 4, 5 };
-        const spline = BSpline1D(T){ .knots = &knots };
+        const spline = BSpline1D(T, knots.len){ .knots = &knots };
 
         try std.testing.expectEqual(null, spline.basesAt(degree, -1.00));
         {
@@ -268,7 +268,7 @@ test "b-spline bases" {
 }
 
 // TODO add knot ops to context (enables use of Q64 for knots)
-pub fn BSpline1D(comptime Knot: type) type {
+pub fn BSpline1D(comptime Knot: type, comptime knot_count: usize) type {
     const CmpContext = void;
     const cmpContext: CmpContext = {};
     const lessThan = std.sort.asc(Knot);
@@ -288,7 +288,7 @@ pub fn BSpline1D(comptime Knot: type) type {
         const Self = @This();
 
         /// The knots of the spline. Must be sorted in ascending order.
-        knots: []const Knot,
+        knots: *const [knot_count]Knot,
 
         // TODO add SIMD routine for evaluation of many values in bulk
         pub fn evalCtrlPointsAt(
@@ -296,11 +296,9 @@ pub fn BSpline1D(comptime Knot: type) type {
             comptime CtrlPoint: type,
             comptime context: anytype,
             comptime degree: comptime_int,
-            ctrl_points: []const CtrlPoint,
+            ctrl_points: *const [knot_count - degree - 1]CtrlPoint,
             x: Knot,
         ) ?CtrlPoint {
-            std.debug.assert(ctrl_points.len + degree + 1 == self.knots.len);
-
             const bases = self.basesAt(degree, x) orelse return null;
 
             var result: CtrlPoint = context.makeZero();
