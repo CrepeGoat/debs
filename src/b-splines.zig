@@ -286,6 +286,8 @@ pub fn BSpline1D(comptime Knot: type) type {
 
     return struct {
         const Self = @This();
+
+        /// The knots of the spline. Must be sorted in ascending order.
         knots: []const Knot,
 
         // TODO add SIMD routine for evaluation of many values in bulk
