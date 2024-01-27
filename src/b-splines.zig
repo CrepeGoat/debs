@@ -7,7 +7,8 @@ test "b-spline evaluation - 1st-degree, scalar output" {
 
     const degree = 1;
     const knots = [_]Knot{ 0, 0, 3, 4, 4 };
-    const ctrl_points = [_]CtrlPoint{ 1, 2, 5 };
+    const ctrl_points_source = [_]CtrlPoint{ undefined, 1, 2, 5 };
+    const ctrl_points = ctrl_points_source[1..].*;
 
     const spline = BSpline1D(Knot, knots.len){ .knots = &knots };
 
@@ -18,14 +19,14 @@ test "b-spline evaluation - 1st-degree, scalar output" {
         CtrlPoint,
         context,
         degree,
-        &ctrl_points,
+        ctrl_points,
         -1,
     ));
     try std.testing.expectEqual(null, spline.evalCtrlPointsAt(
         CtrlPoint,
         context,
         degree,
-        &ctrl_points,
+        ctrl_points,
         5,
     ));
 
@@ -36,7 +37,7 @@ test "b-spline evaluation - 1st-degree, scalar output" {
             CtrlPoint,
             context,
             degree,
-            &ctrl_points,
+            ctrl_points,
             0,
         ) orelse unreachable,
         1e-5,
@@ -47,7 +48,7 @@ test "b-spline evaluation - 1st-degree, scalar output" {
             CtrlPoint,
             context,
             degree,
-            &ctrl_points,
+            ctrl_points,
             3,
         ) orelse unreachable,
         1e-5,
@@ -58,7 +59,7 @@ test "b-spline evaluation - 1st-degree, scalar output" {
             CtrlPoint,
             context,
             degree,
-            &ctrl_points,
+            ctrl_points,
             4,
         ) orelse unreachable,
         1e-5,
@@ -71,7 +72,7 @@ test "b-spline evaluation - 1st-degree, scalar output" {
             CtrlPoint,
             context,
             degree,
-            &ctrl_points,
+            ctrl_points,
             0.75,
         ) orelse unreachable,
         1e-5,
@@ -82,7 +83,7 @@ test "b-spline evaluation - 1st-degree, scalar output" {
             CtrlPoint,
             context,
             degree,
-            &ctrl_points,
+            ctrl_points,
             3.5,
         ) orelse unreachable,
         1e-5,
@@ -107,14 +108,14 @@ test "b-spline evaluation - 2nd-degree, scalar output" {
         CtrlPoint,
         context,
         degree,
-        &ctrl_points,
+        ctrl_points,
         -1,
     ));
     try std.testing.expectEqual(null, spline.evalCtrlPointsAt(
         CtrlPoint,
         context,
         degree,
-        &ctrl_points,
+        ctrl_points,
         5,
     ));
 
@@ -125,7 +126,7 @@ test "b-spline evaluation - 2nd-degree, scalar output" {
             CtrlPoint,
             context,
             degree,
-            &ctrl_points,
+            ctrl_points,
             0,
         ) orelse unreachable,
         1e-5,
@@ -136,7 +137,7 @@ test "b-spline evaluation - 2nd-degree, scalar output" {
             CtrlPoint,
             context,
             degree,
-            &ctrl_points,
+            ctrl_points,
             4,
         ) orelse unreachable,
         1e-5,
@@ -167,7 +168,7 @@ test "b-spline evaluation - 2nd-degree, scalar output" {
                 CtrlPoint,
                 context,
                 degree,
-                &ctrl_points,
+                ctrl_points,
                 x,
             ) orelse unreachable,
             1e-7,
@@ -197,7 +198,7 @@ test "b-spline evaluation - 2nd-degree, scalar output" {
                 CtrlPoint,
                 context,
                 degree,
-                &ctrl_points,
+                ctrl_points,
                 x,
             ) orelse unreachable,
             1e-7,
@@ -296,7 +297,7 @@ pub fn BSpline1D(comptime Knot: type, comptime knot_count: usize) type {
             comptime CtrlPoint: type,
             comptime context: anytype,
             comptime degree: comptime_int,
-            ctrl_points: *const [knot_count - degree - 1]CtrlPoint,
+            ctrl_points: [knot_count - degree - 1]CtrlPoint,
             x: Knot,
         ) ?CtrlPoint {
             const bases = self.basesAt(degree, x) orelse return null;
