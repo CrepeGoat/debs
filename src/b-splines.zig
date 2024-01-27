@@ -1,5 +1,70 @@
 const std = @import("std");
 
+pub fn BSplineND(comptime dim_count: usize, comptime Knot: type) type {
+    comptime std.debug.assert(dim_count > 0); // dim_count == 0 -> no data
+
+    return struct {
+        const Self = @This();
+        splines: [dim_count]BSpline1D(Knot),
+
+        pub fn evalCtrlPointsAt(
+            self: Self,
+            comptime CtrlPoint: type,
+            comptime context: anytype,
+            comptime degree: comptime_int,
+            ctrl_points: NDSlice(dim_count, CtrlPoint, .Const),
+            x: [dim_count]Knot,
+        ) ?CtrlPoint {
+            if (dim_count == 1) {
+                return self.splines[0].evalCtrlPointsAt(
+                    CtrlPoint,
+                    context,
+                    degree,
+                    ctrl_points,
+                );
+            }
+
+            const bases_0 = self.splines[0].basesAt(x[0]) orelse return null;
+            const lesser_spline = Self{ .splines = self.splines[1..] };
+            var result: CtrlPoint = 0;
+            for (
+                ctrl_points[bases_0.index..][0..bases_0.basis_values.len],
+                bases_0.basis_values,
+            ) |lesser_ctrl_points, basis_value| {
+                result = context.add(
+                    result,
+                    context.mulKnot(lesser_spline.evalCtrlPointsAt(
+                        CtrlPoint,
+                        context,
+                        degree,
+                        lesser_ctrl_points,
+                    ), basis_value),
+                );
+            }
+
+            return result;
+        }
+    };
+}
+
+pub fn NDArray(
+    comptime dims: []const usize,
+    comptime T: type,
+) type {
+    return if (dims.len == 0) T else [dims[0]]NDArray(dims[1..], T);
+}
+
+pub fn NDSlice(
+    comptime dim_count: usize,
+    comptime T: type,
+    comptime mutability: enum { Const, Mut },
+) type {
+    return switch (mutability) {
+        .Const => if (dim_count == 0) T else []const NDSlice(dim_count - 1, T, mutability),
+        .Mut => if (dim_count == 0) *T else []NDSlice(dim_count - 1, T, mutability),
+    };
+}
+
 test "b-spline evaluation - 1st-degree, scalar output" {
     const CtrlPoint = f64;
     const Knot = f32;
