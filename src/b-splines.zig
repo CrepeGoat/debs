@@ -1,7 +1,7 @@
 const std = @import("std");
 
 test "b-spline evaluation - 1st-degree, scalar output" {
-    const CtrlPoint = f32;
+    const CtrlPoint = f64;
     const Knot = f32;
     const context = makeFloatContext(CtrlPoint, Knot);
 
@@ -294,16 +294,16 @@ pub fn BSpline1D(comptime Knot: type) type {
             comptime CtrlPoint: type,
             comptime context: anytype,
             comptime degree: comptime_int,
-            ctrl_points: []const Knot,
+            ctrl_points: []const CtrlPoint,
             x: Knot,
-        ) ?Knot {
+        ) ?CtrlPoint {
             std.debug.assert(ctrl_points.len + degree + 1 == self.knots.len);
 
             const bases = self.basesAt(degree, x) orelse return null;
 
             var result: CtrlPoint = context.makeZero();
             for (bases.basis_values, ctrl_points[bases.index .. bases.index + degree + 1]) |b, cp| {
-                result = context.add(result, context.mulKnot(b, cp));
+                result = context.add(result, context.mulKnot(cp, b));
             }
             return result;
         }
