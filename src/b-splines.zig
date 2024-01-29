@@ -1,6 +1,6 @@
 const std = @import("std");
 
-pub fn BSplineND(comptime dim_count: usize, comptime Knot: type) type {
+pub fn BSplineNDTensor(comptime dim_count: usize, comptime Knot: type) type {
     comptime std.debug.assert(dim_count > 0); // dim_count == 0 -> no data
 
     return struct {
