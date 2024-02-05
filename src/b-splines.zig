@@ -290,6 +290,22 @@ pub fn BSpline1D(comptime Knot: type) type {
         /// The knots of the spline. Must be sorted in ascending order.
         knots: []const Knot,
 
+        pub fn initUniformIn(
+            comptime degree: comptime_int,
+            knots_array: []Knot,
+        ) Self {
+            const interior_knots_count = knots_array.len - 2 * (degree - 1);
+
+            inline for (knots_array[0 .. degree + 1]) |*item| item.* = 0;
+            const scale: Knot = 1 / (interior_knots_count + 1);
+            inline for (knots_array[degree .. knots_array.len - degree - 1], 1..) |*item, i| {
+                item.* = @as(Knot, i) * scale;
+            }
+            inline for (knots_array[knots_array.len - degree - 1 ..]) |*item| item.* = 1;
+
+            return .{ .knots = knots_array };
+        }
+
         // TODO add SIMD routine for evaluation of many values in bulk
         pub fn evalCtrlPointsAt(
             self: Self,
