@@ -314,17 +314,13 @@ pub fn BSpline1D(comptime Knot: type) type {
             self: Self,
             comptime degree: comptime_int,
             x: Knot,
-        ) ?BasesAtStruct(degree) {
+        ) ?struct { index: usize, basis_values: [degree + 1]Knot } {
             const x_i = self.knotIndexContaining(x) orelse return null;
             const index = std.math.sub(usize, x_i, degree + 1) catch return null;
             var basis_values: [degree + 1]Knot = undefined;
             self.basisSplinesAbout(degree, &basis_values, x_i, x);
 
             return .{ .index = index, .basis_values = basis_values };
-        }
-
-        pub fn BasesAtStruct(comptime degree: comptime_int) type {
-            return struct { index: usize, basis_values: [degree + 1]Knot };
         }
 
         fn basisSplinesAbout(
